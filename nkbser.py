@@ -44,6 +44,7 @@ arduinoascii =  {'128' : 'LEFT_CTRL'
 
 
 global device
+global devinfo
 device = 0
 
 
@@ -87,15 +88,13 @@ def setdevice():
     device = searchselect()
     print("Selected Device: %s" % (device))
 
-setdevice()
-#try:
-    
 
-#except:
-#    print("Port Unavailable")
 def home():
+    global devinfo
     a = 0
+    update()
     os.system('cls||clear')
+    
     def info():
         print("NKBFWCPv1 - Keypad on %s Info" % device)
         print(" -Keys: %s\r\n" % devinfo["KEY"] 
@@ -123,35 +122,89 @@ def home():
         print(2)
     elif a == 3:
         print(3)
+    elif a == 4:
+        defaultkey()
+    elif a == 5:
+        defaultrgb()
     elif a == 6:
         exit()
 
 def listkey():
+    converted = []
     os.system('cls||clear')
-    ser.write(b'KI')
-    kall = ser.readline().decode("ascii", "ignore").split("|")
-    for i in range(len(kall)-1):
-        buff = kall[i].split(",")
-        for j in range(len(buff)):
-            if int(buff[j]) < 127:
-                buff[j] = chr(int(buff[j]))
-            else:
-                buff[j] = arduinoascii[buff[j]]
-        print(buff)
-    print("Press Any Key To Continue...")
+    def retrivekey():
+        ser.write(b'KI')
+        kall = ser.readline().decode("ascii", "ignore").split("|")
+        for i in range(len(kall)-1):
+            buff = kall[i].split(",")
+            for j in range(len(buff)):
+                try:
+                    if int(buff[j]) < 127:
+                        buff[j] = '%d|%d:"%s"' % (j+1,i+1,chr(int(buff[j])) )
+                    else:
+                        buff[j] = '%d|%d:"%s"' % (j+1,i+1,arduinoascii[buff[j]])
+                except:
+                    buff[j] ="UNKNOWN"
+            converted.append(buff)
+        return converted
+    for i in range(len(retrivekey())):
+        print(retrivekey()[i])
+    print("Press Enter To Continue...")
     input()
     home()
 
+def defaultkey():
+    try:
+        os.system('cls||clear')
+        print("Reverting to Default Key...")
+        ser.write(b'DK')
+        respond = ser.readline()
+        print("Device: %s" % respond.decode("ascii", "ignore"))
+        print("Saving Changes...")
+        ser.write(b'SS')
+        respond = ser.readline()
+        print("Device: %s" % respond.decode("ascii", "ignore"))
+    except:
+        Exception("Port Busy")
+    home()
+
+def defaultrgb():
+    try:
+        os.system('cls||clear')
+        print("Reverting to Default RGB Values...")
+        ser.write(b'DL')
+        respond = ser.readline()
+        print("Device: %s" % respond.decode("ascii", "ignore"))
+        print("Saving Changes...")
+        ser.write(b'SS')
+        respond = ser.readline()
+        print("Device: %s" % respond.decode("ascii", "ignore"))
+    except:
+        Exception("Port Busy")
+    home()
+
+
+    
+
+def update():
+    print("Retrieving %s Info..." % ser.name)
+    global devinfo
+    try:
+        ser.write(b'IN')
+        keyin = ser.readline().decode("ascii", "ignore").split(",")
+        datain = ser.readline().decode("ascii", "ignore").split(",")
+        devinfo = dict(zip(keyin,datain))
+        os.system('cls||clear')
+    except:
+        Exception("Port Busy")
+
+setdevice()
 with serial.Serial(device, 9600, timeout=5) as ser:
         print("Pinging %s..." % ser.name)
         ser.write(b'PG')
         pver = int(ser.readline().decode("ascii", "ignore"))
         if not pver == 1:
             raise Exception("Port Busy")
-        ser.write(b'IN')
-        keyin = ser.readline().decode("ascii", "ignore").split(",")
-        datain = ser.readline().decode("ascii", "ignore").split(",")
-        devinfo = dict(zip(keyin,datain))
         os.system('cls||clear')
         home()
         
