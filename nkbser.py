@@ -46,7 +46,7 @@ arduinoascii =  {'128' : 'LEFT_CTRL'
 
 device = 0
 reversedtable = None
-os.system('color 16')
+os.system('color 17')
 
 def searchselect():
     global device
@@ -54,7 +54,7 @@ def searchselect():
     manu = [comport.manufacturer for comport in serial.tools.list_ports.comports()]
     devicecount = len(comp)
     devicelist = { i + 1 : comp[i] for i in range(0,devicecount)}
-    print("NKBFWCPv1")
+    print("NKBFWCPv1 - Selecting Device")
     print("-%d Port(s) Detected- " % (len(devicelist))) 
     
     #print(arduinoascii)
@@ -132,7 +132,7 @@ def home():
     elif a == 5:
         defaultrgb()
     elif a == 6:
-        exit()
+        quit()
 
 def listkey():
     global converted
