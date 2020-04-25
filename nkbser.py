@@ -160,7 +160,7 @@ def retrivekey():
             buff = kall[i].split(",")
             for j in range(len(buff)):
                 try:
-                    if int(buff[j]) < 127:
+                    if int(buff[j]) < 128:
                         buff[j] = '%d|%d:"%s"' % (j+1,i+1,chr(int(buff[j])) )
                     else:
                         buff[j] = '%d|%d:"%s"' % (j+1,i+1,arduinoascii[buff[j]])
@@ -192,22 +192,27 @@ def defaultkey():
         home()
 
 def defaultrgb():
+    global devinfo
     os.system('cls||clear')
-    try:
-        print("Reverting to Default RGB Values...")
-        ser.write(b'DL')
-        respond = ser.readline()
-        print("Device: %s" % respond.decode("ascii", "ignore"))
-        print("Saving Changes...")
-        ser.write(b'SS')
-        respond = ser.readline()
-        print("Status: %s" % respond.decode("ascii", "ignore"))
-        input("Press Enter to Continue...")
-        home()
-    except Exception as e:
-        print("Error: %s" % e)
-        input()
-        home()
+    if not int(devinfo["LED"] ) == 0:
+        try:
+            print("Reverting to Default RGB Values...")
+            ser.write(b'DL')
+            respond = ser.readline()
+            print("Device: %s" % respond.decode("ascii", "ignore"))
+            print("Saving Changes...")
+            ser.write(b'SS')
+            respond = ser.readline()
+            print("Status: %s" % respond.decode("ascii", "ignore"))
+            input("Press Enter to Continue...")
+            home()
+        except Exception as e:
+            print("Error: %s" % e)
+            input()
+            home()
+    else:
+        input("No LED Detected...")
+        home() 
     
 
 def setkey():
@@ -227,40 +232,47 @@ def setkey():
         col = prompt.integer(prompt="Enter column:",empty=True)
         if not col:
             raise Exception("Returning Home...")
-        elif not col in range(1,int(devinfo["COL"])):
+        elif not col in range(1,int(devinfo["COL"])+1):
             print("Please enter number in range of 1-%s." % (devinfo["COL"]))
             input()
             setkey()
-        row = prompt.integer(prompt="Enter row:",empty=True)
-        if not row:
-            raise Exception("Returning Home...")
-        elif not row in range(1,int(devinfo["ROW"])):
-            print("Please enter number in range of 1-%s." % (devinfo["ROW"]))
-            input()
-            setkey()
+        if int(devinfo["ROW"]) == 1:
+            print("Enter row:1")
+            row = 1
+        else:
+            row = prompt.integer(prompt="Enter row:",empty=True)
+            if not row:
+                raise Exception("Returning Home...")
+            elif not row in range(1,int(devinfo["ROW"])+1):
+                print("Please enter number in range of 1-%s." % (devinfo["ROW"]))
+                input()
+                setkey()
         key = prompt.string(prompt="Enter key:",empty=True)
         try:  
             ascii = ord(key)
             
         except:
-            pass
+            home()
         key.upper()
-        if not key:
-            raise Exception("Returning Home...")
-        elif key in reversedtable:
+        try:
+            if not key:
+                raise Exception("Returning Home...")
+            elif key in reversedtable:
            
-            key = reversedtable[key]
-            sendkey(col,row,int(key))
-            home()
+                key = reversedtable[key]
+                sendkey(col,row,int(key))
+                home()
             
-        elif ascii in range(1,127):
+            elif ascii in range(1,128):
             
-            sendkey(col,row,int(ord(key)))
+                sendkey(col,row,int(ord(key)))
+                home()
+            else:
+                print("Please enter a valid key.")
+                input()
+                setkey()
+        except:
             home()
-        else:
-            print("Please enter a valid key.")
-            input()
-            setkey()
         
 
     except Exception as e:
@@ -297,40 +309,43 @@ def setrgb():
     global devinfo
         
     os.system('cls||clear')
-    try:
-        print("Change RGB\n")
-        print("Current RGB Value: %s\n" % (devinfo["RGB"]))
-        print("\nEnter nothing to return to home.")
-        r = prompt.integer(prompt="Enter Red value:",empty=True)
-        if not r:
-            raise Exception("Returning Home...")
-        elif not r in range(0,256):
-            print("Please enter number in range of 0-255.")
-            input()
-            setrgb()
-        g = prompt.integer(prompt="Enter Green value:",empty=True)
-        if not g:
-            raise Exception("Returning Home...")
-        elif not g in range(0,256):
-            print("Please enter number in range of 0-255.")
-            input()
-            setrgb()
-        b = prompt.integer(prompt="Enter Blue value:",empty=True)
-        if not b:
-            raise Exception("Returning Home...")
-        elif not b in range(0,256):
-            print("Please enter number in range of 0-255.")
-            input()
-            setrgb()
+    if not int(devinfo["LED"] ) == 0:
+        try:
+            print("Change RGB\n")
+            print("Current RGB Value: %s\n" % (devinfo["RGB"]))
+            print("\nEnter nothing to return to home.")
+            r = prompt.integer(prompt="Enter Red value:",empty=True)
+            if not r:
+                raise Exception("Returning Home...")
+            elif not r in range(0,256):
+                print("Please enter number in range of 0-255.")
+                input()
+                setrgb()
+            g = prompt.integer(prompt="Enter Green value:",empty=True)
+            if not g:
+                raise Exception("Returning Home...")
+            elif not g in range(0,256):
+                print("Please enter number in range of 0-255.")
+                input()
+                setrgb()
+            b = prompt.integer(prompt="Enter Blue value:",empty=True)
+            if not b:
+                raise Exception("Returning Home...")
+            elif not b in range(0,256):
+                print("Please enter number in range of 0-255.")
+                input()
+                setrgb()
 
-        sendrgb(r,g,b)
-        raise Exception("Returning Home...")
-        
+            sendrgb(r,g,b)
+            raise Exception("Returning Home...")
+            
 
-    except Exception as e:
-        print(e)
-        home()
-        
+        except Exception as e:
+            print(e)
+            home()
+    else:
+        input("No LED Detected...")
+        home()        
         
 
 def sendrgb(inr,ing,inb):
