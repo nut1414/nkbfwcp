@@ -1,6 +1,7 @@
 # nkbser.py
 
 import os
+import sys
 import serial
 import serial.tools.list_ports
 import prompt
@@ -132,7 +133,7 @@ def home():
     elif a == 5:
         defaultrgb()
     elif a == 6:
-        quit()
+        sys.exit()
 
 def listkey():
     global converted
