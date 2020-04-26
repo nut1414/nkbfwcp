@@ -319,21 +319,21 @@ def setrgb():
             print("Current RGB Value: %s\n" % (devinfo["RGB"]))
             print("\nEnter nothing to return to home.")
             r = prompt.integer(prompt="Enter Red value:",empty=True)
-            if not r:
+            if r == None:
                 raise Exception("Returning Home...")
             elif not r in range(0,256):
                 print("Please enter number in range of 0-255.")
                 input()
                 setrgb()
             g = prompt.integer(prompt="Enter Green value:",empty=True)
-            if not g:
+            if g == None:
                 raise Exception("Returning Home...")
             elif not g in range(0,256):
                 print("Please enter number in range of 0-255.")
                 input()
                 setrgb()
             b = prompt.integer(prompt="Enter Blue value:",empty=True)
-            if not b:
+            if b == None:
                 raise Exception("Returning Home...")
             elif not b in range(0,256):
                 print("Please enter number in range of 0-255.")
