@@ -95,44 +95,48 @@ def setdevice():
 def home():
     global devinfo
     a = 0
-    update()
-    os.system('cls||clear')
+    try:
+        update()
+        os.system('cls||clear')
     
-    def info():
-        try:
-            print("NKBFWCPv1 - %s on %s Info" % (devinfo["NAME"],device))
-            print(" -Keys: %s\r\n" % devinfo["KEY"] 
+        def info():
+            try:
+                print("NKBFWCPv1 - %s on %s Info" % (devinfo["NAME"],device))
+                print(" -Keys: %s\r\n" % devinfo["KEY"] 
                  ,"-Matrix Configuration: %s X %s\r\n" % (devinfo["COL"],devinfo["ROW"])
                  ,"-LED: %s\r\n" % devinfo["LED"]
                  ,"-RGB: %s\r\n" % devinfo["RGB"])
-            print("Option"
+                print("Option"
                  ,"\n1.List All Key"
                  ,"\n2.Change Key"
                  ,"\n3.Change RGB Color"
                  ,"\n4.Revert to Default Key"
-                 ,"\n5.Revert to Default RGB Color"
-                 ,"\n6.Exit\n")
-        except:
-            update()
+                 ,"\n5.Revert to Default RGB Color")
+            except:
+                update()
         
         
     
-    while not a in range(1,7):
-        os.system('cls||clear')
-        info()
-        a = prompt.integer(prompt="Enter number (1-6):" )
+        while not a in range(1,7):
+            os.system('cls||clear')
+            info()
+            a = prompt.integer(prompt="Enter number (1-5):" )
             
-    if a == 1:
-        listkey()
-    elif a == 2:
-        setkey()
-    elif a == 3:
-        setrgb()
-    elif a == 4:
-        defaultkey()
-    elif a == 5:
-        defaultrgb()
-    elif a == 6:
+        if a == 1:
+            listkey()
+        elif a == 2:
+            setkey()
+        elif a == 3:
+            setrgb()
+        elif a == 4:
+            defaultkey()
+        elif a == 5:
+            defaultrgb()
+        elif a == 6:
+            sys.exit()
+    except Exception as e:
+        print(e)
+        input()
         sys.exit()
 
 def listkey():
