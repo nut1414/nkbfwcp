@@ -44,7 +44,10 @@ arduinoascii =  {'128' : 'LEFT_CTRL'
                 ,'255' : 'KEY_SPACE'
                 ,'32' : 'SPACE'}
 
-
+global converted
+global devinfo
+converted = []
+devinfo = {}
 device = 0
 reversedtable = None
 os.system('color 17')
