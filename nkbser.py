@@ -6,6 +6,8 @@ import serial
 import serial.tools.list_ports
 import prompt
 from retrying import retry
+
+
 arduinoascii =  {'128' : 'LEFT_CTRL'
                 ,'129' : 'LEFT_SHIFT'
                 ,'130' : 'LEFT_ALT'
@@ -50,14 +52,25 @@ converted = []
 devinfo = {}
 device = 0
 reversedtable = None
-os.system('color 17')
 
+
+    
+
+class deviceList(object):
+    def __init__(self):
+        self.device = [comport.device for comport in serial.tools.list_ports.comports()]
+        self.manufacturer  = [comport.manufacturer for comport in serial.tools.list_ports.comports()]
+        self.deviceCount = len(self.device)
+        listdev = { i + 1 : self.device[i] for i in range(0,self.deviceCount)}
+        self.list ={value:key for key, value in listdev.items()}
+    
 def searchselect():
     global device
     comp = [comport.device for comport in serial.tools.list_ports.comports()]
     manu = [comport.manufacturer for comport in serial.tools.list_ports.comports()]
     devicecount = len(comp)
     devicelist = { i + 1 : comp[i] for i in range(0,devicecount)}
+    '''
     print("NKBFWCPv1 - Selecting Device")
     print("-%d Port(s) Detected- " % (len(devicelist))) 
     
@@ -84,6 +97,7 @@ def searchselect():
         os.system('cls||clear')
         raise Exception("Invalid Value") 
     device = comp[(currentdev-1)]
+    '''
     return device
 
 os.system('cls||clear')
@@ -388,7 +402,7 @@ def update():
         print("Error: %s" % e)
         input()
         
-
+'''
 setdevice()
 
 try:
@@ -409,3 +423,4 @@ try:
 except Exception as e:
     print("Error: %s" % e)
     input()
+'''
