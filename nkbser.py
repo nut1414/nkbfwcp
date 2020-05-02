@@ -52,7 +52,7 @@ converted = []
 devinfo = {}
 device = 0
 reversedtable = None
-
+global ser
 
     
 
@@ -63,7 +63,54 @@ class deviceList(object):
         self.deviceCount = len(self.device)
         listdev = { i + 1 : self.device[i] for i in range(0,self.deviceCount)}
         self.list ={value:key for key, value in listdev.items()}
-    
+    def update(self):
+        self.device = [comport.device for comport in serial.tools.list_ports.comports()]
+        self.manufacturer  = [comport.manufacturer for comport in serial.tools.list_ports.comports()]
+        self.deviceCount = len(self.device)
+        listdev = { i + 1 : self.device[i] for i in range(0,self.deviceCount)}
+        self.list ={value:key for key, value in listdev.items()}
+
+class connect(object):
+    def openSerial(self,device):
+        
+        try:
+            with serial.Serial(device, 9600, timeout=5) as ser:
+                print("Pinging %s..." % ser.name)
+                try: 
+                    ser.write(b'PG')
+                    pver = int(ser.readline().decode("ascii", "ignore"))
+                    if not pver == 1:
+                        raise Exception("Port Unknown")
+                    else:
+                        ser.close()
+                        return 1
+                except Exception as e:
+                    print("Error: %s" % e)
+                    
+            
+        except Exception as e:
+            print("Error: %s" % e)
+            
+
+    def updateSerial(self,device):
+        print("Retrieving %s Info..." % device)
+        with serial.Serial(device, 9600, timeout=5) as ser:
+            try:
+                ser.write(b'IN')
+                keyin = ser.readline().decode("ascii", "ignore").split(",")
+                datain = ser.readline().decode("ascii", "ignore").split(",")
+                devinfo = dict(zip(keyin,datain))
+                os.system('cls||clear')
+                ser.close()
+                return devinfo
+            except Exception as e:
+                print("Error: %s" % e)
+        
+
+
+
+
+
 def searchselect():
     global device
     comp = [comport.device for comport in serial.tools.list_ports.comports()]
@@ -389,38 +436,10 @@ def sendrgb(inr,ing,inb):
         home()
 
     return
-def update():
-    print("Retrieving %s Info..." % ser.name)
-    global devinfo
-    try:
-        ser.write(b'IN')
-        keyin = ser.readline().decode("ascii", "ignore").split(",")
-        datain = ser.readline().decode("ascii", "ignore").split(",")
-        devinfo = dict(zip(keyin,datain))
-        os.system('cls||clear')
-    except Exception as e:
-        print("Error: %s" % e)
-        input()
+
         
 '''
 setdevice()
 
-try:
-    with serial.Serial(device, 9600, timeout=5) as ser:
-        print("Pinging %s..." % ser.name)
-        try: 
-            ser.write(b'PG')
-            pver = int(ser.readline().decode("ascii", "ignore"))
-            if not pver == 1:
-                raise Exception("Port Unknown")
-        except Exception as e:
-            print("Error: %s" % e)
-            input()
-            
-        os.system('cls||clear')
-        home()
-        
-except Exception as e:
-    print("Error: %s" % e)
-    input()
+
 '''
