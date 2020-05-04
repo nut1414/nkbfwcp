@@ -100,12 +100,38 @@ class connect(object):
                 keyin = ser.readline().decode("ascii", "ignore").split(",")
                 datain = ser.readline().decode("ascii", "ignore").split(",")
                 devinfo = dict(zip(keyin,datain))
-                os.system('cls||clear')
+                
                 ser.close()
                 return devinfo
             except Exception as e:
                 print("Error: %s" % e)
         
+    def retrieveKey(self,device):
+        converted = []
+        with serial.Serial(device, 9600, timeout=5) as ser:
+            try:
+                ser.write(b'KI')
+                kall = ser.readline().decode("ascii", "ignore").split("|")
+            
+                for i in range(len(kall)-1):
+                    buff = kall[i].split(",")
+                    for j in range(len(buff)):
+                        try:
+                            if int(buff[j]) < 128:
+                                buff[j] = '%d|%d:"%s"' % (j+1,i+1,chr(int(buff[j])) )
+                            else:
+                                buff[j] = '%d|%d:"%s"' % (j+1,i+1,arduinoascii[buff[j]])
+                        except:
+                            buff[j] ="UNKNOWN"
+                    converted.append(buff)
+            except Exception as e:
+                print("Error: %s" % e)
+        print(converted)
+        print(type(converted[0]))
+        print(len(converted[0]))
+        return converted
+
+
 
 
 
@@ -217,29 +243,7 @@ def listkey():
     input()
     home()
 
-def retrivekey():
-    global converted
-    converted = []
-    try:
-        ser.write(b'KI')
-        kall = ser.readline().decode("ascii", "ignore").split("|")
-    
-        for i in range(len(kall)-1):
-            buff = kall[i].split(",")
-            for j in range(len(buff)):
-                try:
-                    if int(buff[j]) < 128:
-                        buff[j] = '%d|%d:"%s"' % (j+1,i+1,chr(int(buff[j])) )
-                    else:
-                        buff[j] = '%d|%d:"%s"' % (j+1,i+1,arduinoascii[buff[j]])
-                except:
-                    buff[j] ="UNKNOWN"
-            converted.append(buff)
-    except Exception as e:
-        print("Error: %s" % e)
-        input()
-            
-    return converted
+
 
 def defaultkey():
     try:

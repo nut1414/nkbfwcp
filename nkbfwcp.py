@@ -9,6 +9,7 @@ device = ""
 
 deviceroot = nkbser.deviceList()
 connect = nkbser.connect()
+
 class deviceChooser(Frame):
     def __init__(self,parent):
         
@@ -68,6 +69,7 @@ class deviceChooser(Frame):
     
 class controlPanel(Frame):
     def __init__(self,parent): 
+        super(controlPanel, self).__init__()
         global device
         self.parent = parent
         self.parent.title("nkbfw")
@@ -84,20 +86,42 @@ class controlPanel(Frame):
         self.setScene(self.selecteddevice)
     def setScene(self, name):
         self.isserial = connect.openSerial(name)
-        
-        if self.isserial :
-            self.text = Label(self.parent,text="We are Connected on {}".format(name))
-            self.text.pack()
-            self.deviceinfo = connect.updateSerial(name) #temp \/
-            self.text2 = Label(self.parent,text="Keys: {},Matrix Configuration: {}x{},LED: {},RGB: {}".format(self.deviceinfo["KEY"],self.deviceinfo["COL"],self.deviceinfo["ROW"],self.deviceinfo["LED"],self.deviceinfo["RGB"]))
-            self.text2.pack()
-        else:
-            raise Exception("Failed to Connect to Device")
+        try:
+            if self.isserial :
+                self.deviceinfo = connect.updateSerial(name) #temp \/
+                self.text = Label(self.parent,text="{} on {}".format(self.deviceinfo["NAME"],name))
+                self.text.pack()
+                
+                self.text2 = Label(self.parent,text="Keys: {},Matrix Configuration: {}x{},LED: {},RGB: {}".format(self.deviceinfo["KEY"],self.deviceinfo["COL"],self.deviceinfo["ROW"],self.deviceinfo["LED"],self.deviceinfo["RGB"]))
+                self.text2.pack()
+                self.keydata = keyFrame(self.parent,name)
+                self.keydata.pack()
+            else:
+                raise Exception("Device Connection Failed")
+        except:
             self.chooseDevice()
-            return
-            
 
 
+class keyFrame(Frame):
+    def __init__(self,parent,name):
+        super(keyFrame, self).__init__()
+        self.parent = parent
+        keydata = connect.retrieveKey(name)
+        self.keydata = Label(self.parent,text="{}  , Count {}".format(keydata, len(keydata)))
+        self.keydata.pack()
+        pass
+    pass
+
+class Key:
+    def __init__(self,x,y,button):
+        self.x = x
+        self.y = y
+        self.button = button
+        
+        pass
+
+
+    pass
 
 
 def on_closing():
@@ -105,6 +129,7 @@ def on_closing():
         root.destroy()
 
 root.protocol("WM_DELETE_WINDOW", on_closing)
+
 mainwin = controlPanel(root)
 
 root.mainloop()
