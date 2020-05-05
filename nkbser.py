@@ -118,9 +118,9 @@ class connect(object):
                     for j in range(len(buff)):
                         try:
                             if int(buff[j]) < 128:
-                                buff[j] = '%d|%d:"%s"' % (j+1,i+1,chr(int(buff[j])) )
+                                buff[j] = '%s' % (chr(int(buff[j])) )
                             else:
-                                buff[j] = '%d|%d:"%s"' % (j+1,i+1,arduinoascii[buff[j]])
+                                buff[j] = '%s' % (arduinoascii[buff[j]])
                         except:
                             buff[j] ="UNKNOWN"
                     converted.append(buff)
