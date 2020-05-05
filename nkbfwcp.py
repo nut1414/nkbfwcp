@@ -9,7 +9,7 @@ device = ""
 
 deviceroot = nkbser.deviceList()
 connect = nkbser.connect()
-root.geometry("400x400")
+#root.geometry("570x250")
 class deviceChooser(Frame):
     def __init__(self,parent):
         
@@ -22,7 +22,7 @@ class deviceChooser(Frame):
         parent.geometry("225x255+{}+{}".format(posRight,posnDown))
         parent.resizable(0,0)
         parent.iconbitmap('f.ico')
-        print(deviceroot.deviceCount)
+        print("count {}".format(deviceroot.deviceCount))
         self.devicestring = StringVar(parent)
         self.devText(self.devicestring,deviceroot.deviceCount)
         self.Introtext = Label(parent,text="Choose your device")
@@ -39,7 +39,7 @@ class deviceChooser(Frame):
         self.parent.protocol("WM_DELETE_WINDOW", on_closing)
 
     def updateList(self,sellist):
-        print(deviceroot.deviceCount)
+        print("count {}".format(deviceroot.deviceCount))
         deviceroot.__init__()
         self.devText(self.devicestring,deviceroot.deviceCount)
         sellist.delete(0,END)
@@ -58,9 +58,9 @@ class deviceChooser(Frame):
         devicein = device.find(" ")
         if not devicein == -1:
             device = device[0:devicein]
-            print(device)
+            print("device {}".format(device))
         else:
-            print(device)
+            print("device {}".format(device))
         self.parent.destroy()
         return device
         
@@ -90,7 +90,7 @@ class controlPanel(Frame):
         if self.isserial :
             self.deviceinfo = connect.updateSerial(name) 
             self.text = Label(self.parent,text="{} on {}".format(self.deviceinfo["NAME"],name))
-            self.text.grid(row=0)
+            self.text.grid(sticky=N)
             #temp \/
             self.text2 = Label(self.parent,text="Keys: {},Matrix Configuration: {}x{},LED: {},RGB: {}".format(self.deviceinfo["KEY"],self.deviceinfo["COL"],self.deviceinfo["ROW"],self.deviceinfo["LED"],self.deviceinfo["RGB"]))
             self.text2.grid(row=2)
@@ -113,40 +113,67 @@ class keyFrame(Frame):
         self.keycharlabel = Label(self,text="{}  , Count {}x{}".format(self.keychar, col, row))
         self.keycharlabel.grid(row=1,column=0,padx=10)
         self.rowbox = Listbox(self,selectmode=BROWSE,takefocus=False)
-        self.currentrow = None
+        self.currentrow = [0]
+        self.currentcol = [0]
+        self.keyselectedtext = StringVar(self)
+        self.keyselectedtext.set("Currently Selected Row: 0  Column: 0")
+        self.keyselectedlabel = Label(self,textvariable=self.keyselectedtext,padx=3)
+        self.keyselectedlabel.grid(row=1,column=2,padx=10)
         self.colbox = Listbox(self,selectmode=BROWSE,takefocus=False)
         self.rowbox.grid(row=2,column=0)
         self.colbox.grid(row=2,column=1)
         self.rowupdate()
+        self.selectonce = False
         self.rowpoll()
+        self.colpoll()
         
     def rowpoll(self):
-        nowselect = self.rowbox.curselection()
-        if nowselect != self.currentrow:
+        rowselect = self.rowbox.curselection()
+        if rowselect != self.currentrow:
+            
             try:
-                self.colupdate(nowselect[0])
-            except Exception as e:
-                print(nowselect)
-                print(e)
+                self.colupdate(rowselect[0])
+                self.currentrow = rowselect
+                self.selectonce = True
+                print(self.currentrow)
+
+                self.currentkeyupdate()
+            except :
+                
                 pass
-            self.currentrow = nowselect
+            
         self.after(250, self.rowpoll)
+    def colpoll(self):
+        colselect = self.colbox.curselection()
+        if colselect != self.currentcol:
+            try:
+                self.currentcol = colselect
+                print(self.currentcol)
+                if self.selectonce == True:
+                    self.currentkeyupdate()
+            except:
+                
+                pass
+            
+        self.after(250, self.colpoll)
     def rowupdate(self):
         for i in range(len(self.keychar)):
-            print(i+1)
             self.rowbox.insert(i,*str(i+1))
             pass
         pass
     def colupdate(self,row):
-        print(len(self.keychar[row]))
-        print(row)
         self.colbox.delete(0,END)
         for i in range(len(self.keychar[row])):
-            text = "{}|{}  {}".format(row+1,i+1,self.keychar[row][i])
+            text = "{}|{} - {}".format(row+1,i+1,self.keychar[row][i])
             self.colbox.insert(i,text)
-            pass
-        pass
-    pass
+    def currentkeyupdate(self):
+        self.keyselectedtext.set("Currently Selected Row: {}  Column: {}".format(int(self.currentrow[0])+1, int(self.currentcol[0])+1))
+
+        
+
+    
+        
+    
 
 
 

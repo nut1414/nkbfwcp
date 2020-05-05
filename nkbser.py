@@ -126,9 +126,9 @@ class connect(object):
                     converted.append(buff)
             except Exception as e:
                 print("Error: %s" % e)
-        print(converted)
-        print(type(converted[0]))
-        print(len(converted[0]))
+        print("keylist {}".format(converted))
+        
+        print("keycount1 {}".format(len(converted[0])))
         return converted
 
 
