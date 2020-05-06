@@ -85,10 +85,12 @@ class connect(object):
                         ser.close()
                         return 1
                 except Exception as e:
+                    return 0
                     print("Error: %s" % e)
                     
             
         except Exception as e:
+            return 0
             print("Error: %s" % e)
             
 
