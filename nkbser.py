@@ -88,7 +88,6 @@ class connect(object):
                     return 0
                     print("Error: %s" % e)
                     
-            
         except Exception as e:
             return 0
             print("Error: %s" % e)
@@ -132,6 +131,55 @@ class connect(object):
         
         print("keycount1 {}".format(len(converted[0])))
         return converted
+
+    def sendrgb(self,device,inr,ing,inb):
+        with serial.Serial(device, 9600, timeout=5) as ser:
+            try:
+                print("Sending RGB Change..")
+                cmd = "LC %d %d %d" %(inr ,ing ,inb)
+                ser.write(bytearray(cmd,encoding="ascii"))
+                print("Device: %s" % (ser.readline().decode("ascii", "ignore")))
+                print("Saving Changes...")
+                ser.write(b'SS')
+                print("Status: %s" % (ser.readline().decode("ascii", "ignore")))
+                
+            except Exception as e:
+                print("Error: %s" % e)
+                
+
+            return
+
+    def defaultkey(self,device):
+        with serial.Serial(device, 9600, timeout=5) as ser:
+            try:    
+                print("Reverting to Default Key...")
+                ser.write(b'DK')
+                respond = ser.readline()
+                print("Device: %s" % respond.decode("ascii", "ignore"))
+                print("Saving Changes...")
+                ser.write(b'SS')
+                respond = ser.readline()
+                print("Status: %s" % respond.decode("ascii", "ignore"))
+                
+            except Exception as e:
+                print("Error: %s" % e)
+                
+    def defaultrgb(self,device):
+        with serial.Serial(device, 9600, timeout=5) as ser:
+            try:
+                print("Reverting to Default RGB Values...")
+                ser.write(b'DL')
+                respond = ser.readline()
+                print("Device: %s" % respond.decode("ascii", "ignore"))
+                print("Saving Changes...")
+                ser.write(b'SS')
+                respond = ser.readline()
+                print("Status: %s" % respond.decode("ascii", "ignore"))
+
+            except Exception as e:
+                print("Error: %s" % e)
+                
+        
 
 
 
@@ -247,46 +295,7 @@ def listkey():
 
 
 
-def defaultkey():
-    try:
-        os.system('cls||clear')
-        print("Reverting to Default Key...")
-        ser.write(b'DK')
-        respond = ser.readline()
-        print("Device: %s" % respond.decode("ascii", "ignore"))
-        print("Saving Changes...")
-        ser.write(b'SS')
-        respond = ser.readline()
-        print("Status: %s" % respond.decode("ascii", "ignore"))
-        input("Press Enter to Continue...")
-        home()
-    except Exception as e:
-        print("Error: %s" % e)
-        input()
-        home()
 
-def defaultrgb():
-    global devinfo
-    os.system('cls||clear')
-    if not int(devinfo["LED"] ) == 0:
-        try:
-            print("Reverting to Default RGB Values...")
-            ser.write(b'DL')
-            respond = ser.readline()
-            print("Device: %s" % respond.decode("ascii", "ignore"))
-            print("Saving Changes...")
-            ser.write(b'SS')
-            respond = ser.readline()
-            print("Status: %s" % respond.decode("ascii", "ignore"))
-            input("Press Enter to Continue...")
-            home()
-        except Exception as e:
-            print("Error: %s" % e)
-            input()
-            home()
-    else:
-        input("No LED Detected...")
-        home() 
     
 
 def setkey():
@@ -422,26 +431,7 @@ def setrgb():
         home()        
         
 
-def sendrgb(inr,ing,inb):
-    '''
-    pushing rgb change via the already opened serial
-    '''
-    try:
-        print("\nSending Change..")
-        cmd = "LC %d %d %d" %(inr ,ing ,inb)
-        ser.write(bytearray(cmd,encoding="ascii"))
-        print("Device: %s" % (ser.readline().decode("ascii", "ignore")))
-        print("Saving Changes...")
-        ser.write(b'SS')
-        print("Status: %s" % (ser.readline().decode("ascii", "ignore")))
-        input("Press Enter to Continue...")
-        
-    except Exception as e:
-        print("Error: %s" % e)
-        input()
-        home()
 
-    return
 
         
 '''

@@ -10,10 +10,14 @@ device = ""
 
 deviceroot = nkbser.deviceList()
 connect = nkbser.connect()
+
+
+
+devtextinfo = StringVar()
+
 def on_closing():
     if messagebox.askokcancel("Quit", "Do you want to quit?"):
         root.destroy()
-
 #root.geometry("570x250")
 class deviceChooser(Frame):
     def __init__(self,parent):
@@ -76,26 +80,35 @@ class controlPanel(Frame):
         global device
         Frame.__init__(self, parent)
         self.parent = parent
-        self.parent.title("nkbfw")
+        self.parent.title("nkbfwcp")
         self.parent.iconbitmap('f.ico')
         self.selectionmenu()
         self.chooseDevice()
-        
+    
 
     def selectionmenu(self):
         self.menutab = Menu(root)
-        self.submenu = Menu(self.menutab,tearoff=False)
-        self.submenu.add_command(label="Reselect Device",command=self.deleteScene)
-        self.submenu.add_separator()
-        self.submenu.add_command(label="Exit",command=on_closing)
-        self.menutab.add_cascade(label="Device",menu=self.submenu)
+        self.submenu1 = Menu(self.menutab,tearoff=False)
+        self.submenu1.add_command(label="Reselect Device",command=self.deleteScene)
+        self.submenu1.add_separator()
+        self.submenu1.add_command(label="Revert Keys to Default",command=lambda : self.keydata.revertkey(self.keydata.name))
+        self.submenu1.add_command(label="Revert LEDs to Default",command=lambda : self.keydata.revertrgb(self.keydata.name))
+        self.submenu1.add_command(label="Revert All Setting to Default",command=lambda : self.keydata.revertall(self.keydata.name))
+        self.submenu1.add_separator()
+        self.submenu1.add_command(label="Exit",command=on_closing)
+        self.menutab.add_cascade(label="Device",menu=self.submenu1)
+        self.menutab.add_command(label="Refresh",command=lambda : self.keydata.updateinfo(self.keydata.name))
         root.config(menu=self.menutab)
         pass
 
 
 
     def chooseDevice(self):
-        self.submenu.entryconfig("Reselect Device",state="disabled")
+        self.menutab.entryconfig("Refresh",state="disabled")
+        self.submenu1.entryconfig("Reselect Device",state="disabled")
+        self.submenu1.entryconfig("Revert Keys to Default",state="disabled")
+        self.submenu1.entryconfig("Revert LEDs to Default",state="disabled")
+        self.submenu1.entryconfig("Revert All Setting to Default",state="disabled")
         self.connecttext = Label(self.parent,text="Waiting for Device...")
         self.connecttext.grid(sticky=N,padx=50,pady=50)
         self.chDev = Toplevel(self.parent)
@@ -106,7 +119,11 @@ class controlPanel(Frame):
         self.setScene(self.selecteddevice)
 
     def setScene(self, name):
-        self.submenu.entryconfig("Reselect Device",state="normal")
+        self.submenu1.entryconfig("Reselect Device",state="normal")
+        self.submenu1.entryconfig("Revert Keys to Default",state="normal")
+        self.submenu1.entryconfig("Revert LEDs to Default",state="normal")
+        self.submenu1.entryconfig("Revert All Setting to Default",state="normal")
+        self.menutab.entryconfig("Refresh",state="normal")
         isserial = connect.openSerial(name)
         self.connecttext.destroy()
         try:
@@ -116,9 +133,11 @@ class controlPanel(Frame):
                 self.textframe = LabelFrame(self.parent,text="{} on {}".format(self.deviceinfo["NAME"],name))
                 self.textframe.grid(sticky=N)
                 #temp \/
-                self.text2 = Label(self.textframe,text="Keys: {},Matrix Configuration: {}x{},LED: {},RGB: {}".format(self.deviceinfo["KEY"],self.deviceinfo["COL"],self.deviceinfo["ROW"],self.deviceinfo["LED"],self.deviceinfo["RGB"]))
+                devtextinfo.set("Keys: {},Matrix Configuration: {}x{},LED: {},RGB: {}".format(self.deviceinfo["KEY"],self.deviceinfo["COL"],self.deviceinfo["ROW"],self.deviceinfo["LED"],self.deviceinfo["RGB"]))
+                self.text2 = Label(self.textframe,textvariable=devtextinfo)
                 self.text2.grid(row=2)
-                self.keydata = keyFrame(self.parent,name)
+                self.keydata = keyFrame(self.textframe,name,self.deviceinfo)
+                
                 self.keydata.grid(row=1)
             else:
                 print(isserial)
@@ -133,7 +152,6 @@ class controlPanel(Frame):
         try:
             slavelist = root.grid_slaves()
             for i in slavelist:
-                print(i)
                 i.destroy()
             pass
             self.chooseDevice()
@@ -142,29 +160,57 @@ class controlPanel(Frame):
         pass
 
 class keyFrame(Frame):
-    def __init__(self,parent,name):
+    def __init__(self,parent,name,info):
         super(keyFrame, self).__init__()
         Frame.__init__(self, parent)
         self.parent = parent
-        self.keychar = connect.retrieveKey(name)
+        self.deviceinfo = info
+        self.name = name
+        self.keychar = connect.retrieveKey(self.name)
         row = len(self.keychar)
         col = len(self.keychar[0])
-        self.keycharlabel = LabelFrame(self,text="Key")
+        self.keycharlabel = LabelFrame(self,text="Config")
+        self.rgbcharlabel = LabelFrame(self.keycharlabel,text="RGB")
         self.keycharlabel.grid(sticky=N)
+        self.rgbcharlabel.grid(row=2,column=3)
         self.rowbox = Listbox(self.keycharlabel,selectmode=BROWSE,takefocus=False,yscrollcommand=True)
+        self.colbox = Listbox(self.keycharlabel,selectmode=BROWSE,yscrollcommand=True)
         self.currentrow = [0]
         self.currentcol = [0]
+        self.r = IntVar()
+        self.g = IntVar()
+        self.b = IntVar()
+        self.rscale = Scale(self.rgbcharlabel,variable=self.r,from_=255,to=0,length=125)
+        self.gscale = Scale(self.rgbcharlabel,variable=self.g,from_=255,to=0,length=125)
+        self.bscale = Scale(self.rgbcharlabel,variable=self.b,from_=255,to=0,length=125)
+        self.rgbsetbutton = Button(self.rgbcharlabel,text="Set RGB",command=lambda : self.setrgb(name,self.r.get(),self.g.get(),self.b.get()))
         self.keyselectedtext = StringVar(self.keycharlabel)
-        self.keyselectedtext.set("Currently Selected Row: 0  Column: 0")
+        self.keyselectedtext.set("Currently Selected  Row: 0  Column: 0")
         self.keyselectedlabel = Label(self.keycharlabel,textvariable=self.keyselectedtext)
         self.keyselectedlabel.grid(row=1,column=2,padx=10)
         self.rowlabel = Label(self.keycharlabel,text='Row')
         self.collabel = Label(self.keycharlabel,text='Column')
+        self.rlabel = Label(self.rgbcharlabel,text='  R')
+        self.glabel = Label(self.rgbcharlabel,text='  G')
+        self.blabel = Label(self.rgbcharlabel,text='  B')
         self.rowlabel.grid(row=1,column=0)
         self.collabel.grid(row=1,column=1)
-        self.colbox = Listbox(self.keycharlabel,selectmode=BROWSE,yscrollcommand=True)
-        self.rowbox.grid(row=2,column=0,pady=10)
-        self.colbox.grid(row=2,column=1,)
+        self.rlabel.grid(row=1,column=1)
+        self.glabel.grid(row=1,column=2)
+        self.blabel.grid(row=1,column=3)
+        self.rowbox.grid(row=2,column=0,pady=20)
+        self.colbox.grid(row=2,column=1)
+        self.rscale.grid(row=2,column=1)
+        self.gscale.grid(row=2,column=2)
+        self.bscale.grid(row=2,column=3)
+        self.rgbsetbutton.grid(row=3,column=2)
+        self.updateinfo(self.name)
+        if int(self.deviceinfo["LED"]) == 0:
+            self.rscale.config(state="disabled")
+            self.gscale.config(state="disabled")
+            self.bscale.config(state="disabled")
+            self.rgbsetbutton.config(state="disabled")
+            pass
         self.rowupdate()
         self.selectonce = False
         self.rowpoll()
@@ -178,7 +224,7 @@ class keyFrame(Frame):
                 self.colupdate(rowselect[0])
                 self.currentrow = rowselect
                 self.selectonce = True
-                print(self.currentrow)
+                print('selected {}'.format(self.currentrow[0]+1))
 
                 self.currentkeyupdate()
             except :
@@ -191,7 +237,7 @@ class keyFrame(Frame):
         if colselect != self.currentcol:
             try:
                 self.currentcol = colselect
-                print(self.currentcol)
+                print('selected {}'.format(self.currentcol[0]+1))
                 if self.selectonce == True:
                     self.currentkeyupdate()
             except:
@@ -200,19 +246,57 @@ class keyFrame(Frame):
             
         self.after(100, self.colpoll)
     def rowupdate(self):
+        self.rowbox.delete(0,END)
         for i in range(len(self.keychar)):
             self.rowbox.insert(i,*str(i+1))
             pass
         pass
+
     def colupdate(self,row):
         self.colbox.delete(0,END)
         for i in range(len(self.keychar[row])):
             text = "{}|{} - {}".format(row+1,i+1,self.keychar[row][i])
             self.colbox.insert(i,text)
+
     def currentkeyupdate(self):
-        self.keyselectedtext.set("Currently Selected Row: {}  Column: {}".format(int(self.currentrow[0])+1, int(self.currentcol[0])+1))
+        self.keyselectedtext.set("Currently Selected  Row: {}  Column: {}".format(int(self.currentrow[0])+1, int(self.currentcol[0])+1))
 
+    def setrgb(self,name,r,g,b):
+        try:
+            connect.sendrgb(name,r,g,b)
+            self.updateinfo(self.name)
+            
+        except:
+            mainwin.deleteScene()
+
+    def revertkey(self,name):
+        connect.defaultkey(self.name)
+        self.updateinfo(self.name)
+    def revertrgb(self,name):
+        connect.defaultrgb(self.name)
+        self.updateinfo(self.name)
         
+    def revertall(self,name):
+        self.revertkey(name)
+        self.revertrgb(name)
+
+    def updateinfo(self,name):
+        print("updating info")
+        try:
+            self.deviceinfo = connect.updateSerial(self.name)
+            devtextinfo.set("Keys: {},Matrix Configuration: {}x{},LED: {},RGB: {}".format(self.deviceinfo["KEY"],self.deviceinfo["COL"],self.deviceinfo["ROW"],self.deviceinfo["LED"],self.deviceinfo["RGB"]))
+            rgbvalue = self.deviceinfo["RGB"].split("|")
+            self.keychar = connect.retrieveKey(self.name)
+            self.rowupdate()
+            self.colupdate(self.currentrow[0])
+            self.r.set(int(rgbvalue[0]))
+            self.g.set(int(rgbvalue[1]))
+            self.b.set(int(rgbvalue[2]))
+        except Exception as e:
+            print(e)
+            mainwin.deleteScene()
+    
+    
 
     
         
@@ -221,8 +305,7 @@ class keyFrame(Frame):
 
 
 
-
-
+root.resizable(0,0)
 
 root.protocol("WM_DELETE_WINDOW", on_closing)
 
