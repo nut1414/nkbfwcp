@@ -1,11 +1,8 @@
 # nkbser.py
 
-import os
-import sys
 import serial
 import serial.tools.list_ports
-import prompt
-from retrying import retry
+
 
 
 arduinoascii = {32: 'SPACE',
@@ -113,13 +110,8 @@ arduinoascii = {32: 'SPACE',
                 217: 'DOWN_ARROW',
                 218: 'UP_ARROW',
                 255: 'KEY_EMPTY'}
+                
 reverseddict = {value:key for key, value in arduinoascii.items()}
-global converted
-global devinfo
-converted = []
-devinfo = {}
-device = 0
-reversedtable = None
 
     
 
@@ -206,6 +198,7 @@ class connect(object):
             try:
                 print("Sending RGB Change..")
                 cmd = "LC %d %d %d" %(inr ,ing ,inb)
+                print(cmd)
                 ser.write(bytearray(cmd,encoding="ascii"))
                 print("Device: %s" % (ser.readline().decode("ascii", "ignore")))
                 print("Saving Changes...")
@@ -220,7 +213,7 @@ class connect(object):
     def sendkey(self,device,inrow,incol,inkey):
         with serial.Serial(device, 9600, timeout=5) as ser:
             try:
-                print("\nSending Change..")
+                print("Sending Change..")
                 cmd = "CK %d %d %d" %(incol ,inrow ,inkey)
                 print(cmd)
                 ser.write(bytearray(cmd,encoding="ascii"))
@@ -267,175 +260,3 @@ class connect(object):
 
 
 
-
-
-
-
-def searchselect():
-    global device
-    comp = [comport.device for comport in serial.tools.list_ports.comports()]
-    manu = [comport.manufacturer for comport in serial.tools.list_ports.comports()]
-    devicecount = len(comp)
-    devicelist = { i + 1 : comp[i] for i in range(0,devicecount)}
-    '''
-    print("NKBFWCPv1 - Selecting Device")
-    print("-%d Port(s) Detected- " % (len(devicelist))) 
-    
-    #print(arduinoascii)
-
-    for number in range(devicecount):
-        if ("Arduino" in manu[number]) == True:
-            respondtext = " <- Most Likely Device"
-        else:
-            respondtext = " "
-            pass
-        print("%d.%s %s" % ((number+1) , comp[number] , respondtext))
-    try:
-        print("\nEnter 0 to reload")
-        currentdev = int(input("Type in your device number: "))
-    except ValueError:
-        
-        os.system('cls||clear')
-        raise Exception("Invalid Value") 
-    
-    os.system('cls||clear')
-
-    if not 0 < currentdev <= devicecount:
-        os.system('cls||clear')
-        raise Exception("Invalid Value") 
-    device = comp[(currentdev-1)]
-    '''
-    return device
-
-os.system('cls||clear')
-
-@retry
-def setdevice():
-    global device
-    device = searchselect()
-    print("Selected Device: %s" % (device))
-
-
-def home():
-    global devinfo
-    a = 0
-    try:
-        update()
-        os.system('cls||clear')
-    
-        def info():
-            try:
-                print("NKBFWCPv1 - %s on %s Info" % (devinfo["NAME"],device))
-                print(" -Keys: %s\r\n" % devinfo["KEY"] 
-                 ,"-Matrix Configuration: %s X %s\r\n" % (devinfo["COL"],devinfo["ROW"])
-                 ,"-LED: %s\r\n" % devinfo["LED"]
-                 ,"-RGB: %s\r\n" % devinfo["RGB"])
-                print("Option"
-                 ,"\n1.List All Key"
-                 ,"\n2.Change Key"
-                 ,"\n3.Change RGB Color"
-                 ,"\n4.Revert to Default Key"
-                 ,"\n5.Revert to Default RGB Color")
-            except:
-                update()
-        
-        
-    
-        while not a in range(1,7):
-            os.system('cls||clear')
-            info()
-            a = prompt.integer(prompt="Enter number (1-5):" )
-            
-        if a == 1:
-            listkey()
-        elif a == 2:
-            setkey()
-        elif a == 3:
-            setrgb()
-        elif a == 4:
-            defaultkey()
-        elif a == 5:
-            defaultrgb()
-        elif a == 6:
-            sys.exit()
-    except Exception as e:
-        print(e)
-        input()
-        sys.exit()
-
-def listkey():
-    global converted
-    converted = []
-    os.system('cls||clear')
-    print("Requesting Key List...")
-    
-    os.system('cls||clear')
-    print("Key List 'Column|Row'\n")
-    for i in range(len(retrivekey())):
-        print(retrivekey()[i])
-    print("\nPress Enter To Continue...")
-    input()
-    home()
-
-
-
-
-    
-
-
-
-
-
-
-
-def setrgb():
-    global devinfo
-        
-    os.system('cls||clear')
-    if not int(devinfo["LED"] ) == 0:
-        try:
-            print("Change RGB\n")
-            print("Current RGB Value: %s\n" % (devinfo["RGB"]))
-            print("\nEnter nothing to return to home.")
-            r = prompt.integer(prompt="Enter Red value:",empty=True)
-            if r == None:
-                raise Exception("Returning Home...")
-            elif not r in range(0,256):
-                print("Please enter number in range of 0-255.")
-                input()
-                setrgb()
-            g = prompt.integer(prompt="Enter Green value:",empty=True)
-            if g == None:
-                raise Exception("Returning Home...")
-            elif not g in range(0,256):
-                print("Please enter number in range of 0-255.")
-                input()
-                setrgb()
-            b = prompt.integer(prompt="Enter Blue value:",empty=True)
-            if b == None:
-                raise Exception("Returning Home...")
-            elif not b in range(0,256):
-                print("Please enter number in range of 0-255.")
-                input()
-                setrgb()
-
-            sendrgb(r,g,b)
-            raise Exception("Returning Home...")
-            
-
-        except Exception as e:
-            print(e)
-            home()
-    else:
-        input("No LED Detected...")
-        home()        
-        
-
-
-
-        
-'''
-setdevice()
-
-
-'''
