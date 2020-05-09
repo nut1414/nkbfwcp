@@ -8,43 +8,111 @@ import prompt
 from retrying import retry
 
 
-arduinoascii =  {'128' : 'LEFT_CTRL'
-                ,'129' : 'LEFT_SHIFT'
-                ,'130' : 'LEFT_ALT'
-                ,'131' : 'LEFT_GUI'
-                ,'132' : 'RIGHT_CTRL'
-                ,'133' : 'RIGHT_SHIFT'
-                ,'134' : 'RIGHT_ALT'
-                ,'135' : 'RIGHT_GUI'
-                ,'218' : 'UP_ARROW'
-                ,'217' : 'DOWN_ARROW'
-                ,'216' : 'LEFT_ARROW'
-                ,'215' : 'RIGHT_ARROW'
-                ,'178' : 'BACKSPACE'
-                ,'179' : 'TAB'
-                ,'176' : 'RETURN'
-                ,'177' : 'ESC'
-                ,'209' : 'INSERT'
-                ,'212' : 'DELETE'
-                ,'211' : 'PAGE_UP'
-                ,'214' : 'PAGE_DOWN'
-                ,'210' : 'HOME'
-                ,'213' : 'END'
-                ,'193' : 'CAPS_LOCK'
-                ,'194' : 'F1'
-                ,'195' : 'F2'
-                ,'196' : 'F3'
-                ,'197' : 'F4'
-                ,'198' : 'F5'
-                ,'199' : 'F6'
-                ,'200' : 'F7'
-                ,'201' : 'F8'
-                ,'202' : 'F9'
-                ,'203' : 'F10'
-                ,'204' : 'F11'
-                ,'205' : 'F12'
-                ,'255' : 'KEY_SPACE'
-                ,'32' : 'SPACE'}
+arduinoascii = {32: 'SPACE',
+                33: '!',
+                34: '"',
+                35: '#',
+                36: '$',
+                37: '%',
+                38: '&',
+                39: "'",
+                40: '(',
+                41: ')',
+                42: '*',
+                43: '+',
+                44: ',',
+                45: '-',
+                46: '.',
+                47: '/',
+                48: '0',
+                49: '1',
+                50: '2',
+                51: '3',
+                52: '4',
+                53: '5',
+                54: '6',
+                55: '7',
+                56: '8',
+                57: '9',
+                58: ':',
+                59: ';',
+                60: '<',
+                61: '=',
+                62: '>',
+                63: '?',
+                64: '@',
+                91: '[',
+                92: '\\',
+                93: ']',
+                94: '^',
+                95: '_',
+                96: '`',
+                97: 'a',
+                98: 'b',
+                99: 'c',
+                100: 'd',
+                101: 'e',
+                102: 'f',
+                103: 'g',
+                104: 'h',
+                105: 'i',
+                106: 'j',
+                107: 'k',
+                108: 'l',
+                109: 'm',
+                110: 'n',
+                111: 'o',
+                112: 'p',
+                113: 'q',
+                114: 'r',
+                115: 's',
+                116: 't',
+                117: 'u',
+                118: 'v',
+                119: 'w',
+                120: 'x',
+                121: 'y',
+                122: 'z',
+                123: '{',
+                124: '|',
+                125: '}',
+                126: '~',
+                128: 'LEFT_CTRL',
+                129: 'LEFT_SHIFT',
+                130: 'LEFT_ALT',
+                131: 'LEFT_GUI',
+                132: 'RIGHT_CTRL',
+                133: 'RIGHT_SHIFT',
+                134: 'RIGHT_ALT',
+                135: 'RIGHT_GUI',
+                176: 'RETURN',
+                177: 'ESC',
+                178: 'BACKSPACE',
+                179: 'TAB',
+                193: 'CAPS_LOCK',
+                194: 'F1',
+                195: 'F2',
+                196: 'F3',
+                197: 'F4',
+                198: 'F5',
+                199: 'F6',
+                200: 'F7',
+                201: 'F8',
+                202: 'F9',
+                203: 'F10',
+                204: 'F11',
+                205: 'F12',
+                209: 'INSERT',
+                210: 'HOME',
+                211: 'PAGE_UP',
+                212: 'DELETE',
+                213: 'END',
+                214: 'PAGE_DOWN',
+                215: 'RIGHT_ARROW',
+                216: 'LEFT_ARROW',
+                217: 'DOWN_ARROW',
+                218: 'UP_ARROW',
+                255: 'KEY_SPACE'}
 
 global converted
 global devinfo
@@ -118,10 +186,12 @@ class connect(object):
                     buff = kall[i].split(",")
                     for j in range(len(buff)):
                         try:
+                            '''
                             if int(buff[j]) < 128:
                                 buff[j] = '%s' % (chr(int(buff[j])) )
                             else:
-                                buff[j] = '%s' % (arduinoascii[buff[j]])
+                            '''
+                            buff[j] = '%s' % (arduinoascii[int(buff[j])])
                         except:
                             buff[j] ="UNKNOWN"
                     converted.append(buff)
@@ -160,7 +230,6 @@ class connect(object):
                 ser.write(b'SS')
                 respond = ser.readline()
                 print("Status: %s" % respond.decode("ascii", "ignore"))
-                
             except Exception as e:
                 print("Error: %s" % e)
                 
@@ -175,7 +244,6 @@ class connect(object):
                 ser.write(b'SS')
                 respond = ser.readline()
                 print("Status: %s" % respond.decode("ascii", "ignore"))
-
             except Exception as e:
                 print("Error: %s" % e)
                 
