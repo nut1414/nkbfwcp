@@ -80,11 +80,11 @@ arduinoascii = {32: 'SPACE',
                 128: 'LEFT_CTRL',
                 129: 'LEFT_SHIFT',
                 130: 'LEFT_ALT',
-                131: 'LEFT_GUI',
+                131: 'LEFT_OS',
                 132: 'RIGHT_CTRL',
                 133: 'RIGHT_SHIFT',
                 134: 'RIGHT_ALT',
-                135: 'RIGHT_GUI',
+                135: 'RIGHT_OS',
                 176: 'RETURN',
                 177: 'ESC',
                 178: 'BACKSPACE',
@@ -112,15 +112,14 @@ arduinoascii = {32: 'SPACE',
                 216: 'LEFT_ARROW',
                 217: 'DOWN_ARROW',
                 218: 'UP_ARROW',
-                255: 'KEY_SPACE'}
-
+                255: 'KEY_EMPTY'}
+reverseddict = {value:key for key, value in arduinoascii.items()}
 global converted
 global devinfo
 converted = []
 devinfo = {}
 device = 0
 reversedtable = None
-global ser
 
     
 
@@ -218,6 +217,23 @@ class connect(object):
                 
 
             return
+    def sendkey(self,device,inrow,incol,inkey):
+        with serial.Serial(device, 9600, timeout=5) as ser:
+            try:
+                print("\nSending Change..")
+                cmd = "CK %d %d %d" %(incol ,inrow ,inkey)
+                print(cmd)
+                ser.write(bytearray(cmd,encoding="ascii"))
+                print("Device: %s" % (ser.readline().decode("ascii", "ignore")))
+                print("Saving Changes...")
+                ser.write(b'SS')
+                print("Status: %s" % (ser.readline().decode("ascii", "ignore")))
+                
+                
+            except Exception as e:
+                print("Error: %s" % e)
+                
+        
 
     def defaultkey(self,device):
         with serial.Serial(device, 9600, timeout=5) as ser:
@@ -366,92 +382,8 @@ def listkey():
 
     
 
-def setkey():
-    global devinfo
-    global reversedtable
-    ascii=0
-    if not reversedtable : 
-        reversedtable = {value:key for key, value in arduinoascii.items()}
-        
-    os.system('cls||clear')
-    try:
-        print("Change Key\n")
-        print("Key List 'Column|Row'\n")
-        for i in range(len(retrivekey())):
-            print(retrivekey()[i])
-        print("\nEnter nothing to return to home.")
-        col = prompt.integer(prompt="Enter column:",empty=True)
-        if not col:
-            raise Exception("Returning Home...")
-        elif not col in range(1,int(devinfo["COL"])+1):
-            print("Please enter number in range of 1-%s." % (devinfo["COL"]))
-            input()
-            setkey()
-        if int(devinfo["ROW"]) == 1:
-            print("Enter row:1")
-            row = 1
-        else:
-            row = prompt.integer(prompt="Enter row:",empty=True)
-            if not row:
-                raise Exception("Returning Home...")
-            elif not row in range(1,int(devinfo["ROW"])+1):
-                print("Please enter number in range of 1-%s." % (devinfo["ROW"]))
-                input()
-                setkey()
-        key = prompt.string(prompt="Enter key:",empty=True)
-        try:  
-            ascii = ord(key)
-            
-        except:
-            home()
-        key.upper()
-        try:
-            if not key:
-                raise Exception("Returning Home...")
-            elif key in reversedtable:
-           
-                key = reversedtable[key]
-                sendkey(col,row,int(key))
-                home()
-            
-            elif ascii in range(1,128):
-            
-                sendkey(col,row,int(ord(key)))
-                home()
-            else:
-                print("Please enter a valid key.")
-                input()
-                setkey()
-        except:
-            home()
-        
 
-    except Exception as e:
-        print(e)
-        home()
-        
-        
 
-def sendkey(incol,inrow,inkey):
-    '''
-    pushing key change via the already opened serial
-    '''
-    try:
-        print("\nSending Change..")
-        cmd = "CK %d %d %d" %(incol-1 ,inrow-1 ,inkey)
-        ser.write(bytearray(cmd,encoding="ascii"))
-        print("Device: %s" % (ser.readline().decode("ascii", "ignore")))
-        print("Saving Changes...")
-        ser.write(b'SS')
-        print("Status: %s" % (ser.readline().decode("ascii", "ignore")))
-        input("Press Enter to Continue...")
-        
-    except Exception as e:
-        print("Error: %s" % e)
-        input()
-        home()
-
-    return
 
 
 

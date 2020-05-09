@@ -10,9 +10,6 @@ device = ""
 
 deviceroot = nkbser.deviceList()
 connect = nkbser.connect()
-
-
-
 devtextinfo = StringVar()
 
 def on_closing():
@@ -124,6 +121,7 @@ class controlPanel(Frame):
         self.submenu1.entryconfig("Revert LEDs to Default",state="normal")
         self.submenu1.entryconfig("Revert All Setting to Default",state="normal")
         self.menutab.entryconfig("Refresh",state="normal")
+        print("\nvalidating")
         isserial = connect.openSerial(name)
         self.connecttext.destroy()
         try:
@@ -173,38 +171,70 @@ class keyFrame(Frame):
         self.rgbcharlabel = LabelFrame(self.keycharlabel,text="RGB")
         self.keycharlabel.grid(sticky=N)
         self.rgbcharlabel.grid(row=2,column=3)
-        self.rowbox = Listbox(self.keycharlabel,selectmode=BROWSE,takefocus=False,yscrollcommand=True)
-        self.colbox = Listbox(self.keycharlabel,selectmode=BROWSE,yscrollcommand=True)
+
+        self.rowboxframe = Frame(self.keycharlabel)
+        self.colboxframe = Frame(self.keycharlabel)
+        self.rowscroll = Scrollbar(self.rowboxframe)
+        self.colscroll = Scrollbar(self.colboxframe)
+        self.rowlabel = Label(self.keycharlabel,text='Row')
+        self.collabel = Label(self.keycharlabel,text='Column')
+        self.rowbox = Listbox(self.rowboxframe,selectmode=BROWSE,yscrollcommand=self.rowscroll.set)
+        self.colbox = Listbox(self.colboxframe,selectmode=BROWSE,yscrollcommand=self.colscroll.set)
+        self.rowscroll.configure(command=self.rowbox.yview)
+        self.colscroll.configure(command=self.colbox.yview)
         self.currentrow = [0]
         self.currentcol = [0]
+        self.currentkey = [0]
+        self.setkeyframe = Frame(self.keycharlabel)
+        
+        self.keychboxframe = Frame(self.setkeyframe)
+        self.keychscroll = Scrollbar(self.keychboxframe)
+        self.keychooser = Listbox(self.keychboxframe,height=8,selectmode=BROWSE,yscrollcommand=self.keychscroll.set)
+        self.keychscroll.configure(command=self.keychooser.yview)
+        self.keysetbutton = Button(self.setkeyframe,text='Set Key',state='disabled',command=lambda : self.setkey(self.name,self.selrow-1,self.selcol-1,self.keychooser.get(ACTIVE)))
+        self.keychboxframe.grid(row=1,column=1)
+        self.keychscroll.grid(row=1,column=2,sticky=NS)
+        self.keychooser.grid(row=1,column=1)
+        self.keysetbutton.grid(row=2,column=1,sticky=N,pady=1)
+        self.setkeyframe.grid(row=2,column=2)
+        
+        self.keydictlistupdate()
         self.r = IntVar()
         self.g = IntVar()
         self.b = IntVar()
-        self.rscale = Scale(self.rgbcharlabel,variable=self.r,from_=255,to=0,length=125)
-        self.gscale = Scale(self.rgbcharlabel,variable=self.g,from_=255,to=0,length=125)
-        self.bscale = Scale(self.rgbcharlabel,variable=self.b,from_=255,to=0,length=125)
-        self.rgbsetbutton = Button(self.rgbcharlabel,text="Set RGB",command=lambda : self.setrgb(name,self.r.get(),self.g.get(),self.b.get()))
-        self.keyselectedtext = StringVar(self.keycharlabel)
-        self.keyselectedtext.set("Currently Selected  Row: 0  Column: 0")
-        self.keyselectedlabel = Label(self.keycharlabel,textvariable=self.keyselectedtext)
-        self.keyselectedlabel.grid(row=1,column=2,padx=10)
-        self.rowlabel = Label(self.keycharlabel,text='Row')
-        self.collabel = Label(self.keycharlabel,text='Column')
+        self.rgbcanvas =Canvas(self.rgbcharlabel,height=15,width=15)
         self.rlabel = Label(self.rgbcharlabel,text='  R')
         self.glabel = Label(self.rgbcharlabel,text='  G')
         self.blabel = Label(self.rgbcharlabel,text='  B')
-        self.rowlabel.grid(row=1,column=0)
-        self.collabel.grid(row=1,column=1)
+        self.rscale = Scale(self.rgbcharlabel,variable=self.r,from_=255,to=0,length=125,)
+        self.gscale = Scale(self.rgbcharlabel,variable=self.g,from_=255,to=0,length=125)
+        self.bscale = Scale(self.rgbcharlabel,variable=self.b,from_=255,to=0,length=125)
+        self.rgbsetbutton = Button(self.rgbcharlabel,text="Set RGB",command=lambda : self.setrgb(self.name,self.r.get(),self.g.get(),self.b.get()))
+        
+        self.keyselectedtext = StringVar(self.keycharlabel)
+        self.currentkeyupdate()
+        
+        self.keyselectedlabel = Label(self.keycharlabel,textvariable=self.keyselectedtext)
+        self.keyselectedlabel.grid(row=1,column=2)
+        
+        self.rowboxframe.grid(row=2,column=0)
+        self.colboxframe.grid(row=2,column=1)
+        self.rowscroll.grid(row=1,column=1,sticky=NS)
+        self.colscroll.grid(row=1,column=1,sticky=NS)
+        self.rowlabel.grid(row=1,column=0,sticky=S)
+        self.collabel.grid(row=1,column=1,sticky=S)
+        self.rowbox.grid(row=1,column=0)
+        self.colbox.grid(row=1,column=0)
         self.rlabel.grid(row=1,column=1)
         self.glabel.grid(row=1,column=2)
         self.blabel.grid(row=1,column=3)
-        self.rowbox.grid(row=2,column=0,pady=20)
-        self.colbox.grid(row=2,column=1)
-        self.rscale.grid(row=2,column=1)
-        self.gscale.grid(row=2,column=2)
-        self.bscale.grid(row=2,column=3)
-        self.rgbsetbutton.grid(row=3,column=2)
+        self.rgbcanvas.grid(row=3,column=2)
+        self.rscale.grid(row=2,column=1,sticky=W)
+        self.gscale.grid(row=2,column=2,sticky=W)
+        self.bscale.grid(row=2,column=3,sticky=W)
+        self.rgbsetbutton.grid(row=3,column=3)
         self.updateinfo(self.name)
+
         if int(self.deviceinfo["LED"]) == 0:
             self.rscale.config(state="disabled")
             self.gscale.config(state="disabled")
@@ -213,9 +243,12 @@ class keyFrame(Frame):
             pass
         self.rowupdate()
         self.selectonce = False
+        self.updatergbcanvas()
         self.rowpoll()
         self.colpoll()
-        
+        self.keypoll()
+
+
     def rowpoll(self):
         rowselect = self.rowbox.curselection()
         if rowselect != self.currentrow:
@@ -234,17 +267,33 @@ class keyFrame(Frame):
         self.after(250, self.rowpoll)
     def colpoll(self):
         colselect = self.colbox.curselection()
+        
         if colselect != self.currentcol:
             try:
                 self.currentcol = colselect
                 print('selected {}'.format(self.currentcol[0]+1))
-                if self.selectonce == True:
-                    self.currentkeyupdate()
+                self.currentkeyupdate()
             except:
                 
                 pass
-            
         self.after(100, self.colpoll)
+
+    def keypoll(self):
+        
+        keyselect = self.keychooser.curselection()
+        
+        if keyselect != ():
+            try:
+                self.currentkey = keyselect
+                self.selectonce = True
+            except:
+                
+                pass
+        if self.selectonce:
+            self.keysetbutton.config(state='normal')
+            pass
+        self.after(100, self.keypoll)
+
     def rowupdate(self):
         self.rowbox.delete(0,END)
         for i in range(len(self.keychar)):
@@ -258,30 +307,49 @@ class keyFrame(Frame):
             text = "{}|{} - {}".format(row+1,i+1,self.keychar[row][i])
             self.colbox.insert(i,text)
 
+    def keydictlistupdate(self):
+        self.keychooser.delete(0,END)
+        x=0
+        for i in nkbser.arduinoascii.keys():
+            self.keychooser.insert(x,nkbser.arduinoascii[i])
+            x+=1
+
+
     def currentkeyupdate(self):
-        self.keyselectedtext.set("Currently Selected  Row: {}  Column: {}".format(int(self.currentrow[0])+1, int(self.currentcol[0])+1))
+        self.selrow = int(self.currentrow[0])+1
+        self.selcol = int(self.currentcol[0])+1
+        self.keyselectedtext.set("Currently Selected  Row: {}  Column: {}".format(self.selrow, self.selcol))
 
     def setrgb(self,name,r,g,b):
         try:
             connect.sendrgb(name,r,g,b)
-            self.updateinfo(self.name)
+            self.updateinfo(name)
             
         except:
             mainwin.deleteScene()
 
+    def setkey(self,name,row,col,key):
+        convertedkey = nkbser.reverseddict[key]
+
+        connect.sendkey(name,row,col,convertedkey)
+        self.updateinfo(name)
+        pass
+
+
     def revertkey(self,name):
-        connect.defaultkey(self.name)
-        self.updateinfo(self.name)
+        connect.defaultkey(name)
+        self.updateinfo(name)
     def revertrgb(self,name):
-        connect.defaultrgb(self.name)
-        self.updateinfo(self.name)
+        connect.defaultrgb(name)
+        self.updateinfo(name)
         
     def revertall(self,name):
         self.revertkey(name)
         self.revertrgb(name)
 
     def updateinfo(self,name):
-        print("updating info")
+        print("\nupdating info")
+        print("reconnecting")
         try:
             self.deviceinfo = connect.updateSerial(self.name)
             devtextinfo.set("Keys: {},Matrix Configuration: {}x{},LED: {},RGB: {}".format(self.deviceinfo["KEY"],self.deviceinfo["COL"],self.deviceinfo["ROW"],self.deviceinfo["LED"],self.deviceinfo["RGB"]))
@@ -295,7 +363,11 @@ class keyFrame(Frame):
         except Exception as e:
             print(e)
             mainwin.deleteScene()
-    
+    def updatergbcanvas(self):
+        htmlcolor = "#{0:02x}{1:02x}{2:02x}".format(self.r.get(),self.g.get(),self.b.get())
+        self.rgbcanvas.config(bg=htmlcolor)
+        self.after(50, self.updatergbcanvas)
+
     
 
     
