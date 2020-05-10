@@ -1,20 +1,34 @@
+import os
+import sys
 from tkinter import *
 from tkinter import messagebox
 import nkbser as nkbser
 import sys
 
+
 root = Tk()
 global device
 device = ""
-
 
 deviceroot = nkbser.deviceList()
 connect = nkbser.connect()
 devtextinfo = StringVar()
 
+
+
+if hasattr(sys, '_MEIPASS'):
+        icopath = os.path.join(sys._MEIPASS, "f.ico")
+else:
+        icopath =  os.path.join(os.path.abspath("."), "f.ico")
+
+
+
 def on_closing():
     if messagebox.askokcancel("Quit", "Do you want to quit?"):
-        root.destroy()
+        try:
+            root.destroy()
+        except:
+            pass
 #root.geometry("570x250")
 class deviceChooser(Frame):
     def __init__(self,parent):
@@ -26,7 +40,7 @@ class deviceChooser(Frame):
         parent.title('nkbfwcp')
         parent.geometry("225x255+{}+{}".format(posRight,posnDown))
         parent.resizable(0,0)
-        parent.iconbitmap('f.ico')
+        parent.iconbitmap(icopath)
         self.devicestring = StringVar(parent)
         self.devText(self.devicestring,deviceroot.deviceCount)
         self.Introtext = Label(parent,text="Choose your device")
@@ -78,7 +92,7 @@ class controlPanel(Frame):
         Frame.__init__(self, parent)
         self.parent = parent
         self.parent.title("nkbfwcp")
-        self.parent.iconbitmap('f.ico')
+        self.parent.iconbitmap(icopath)
         self.selectionmenu()
         self.chooseDevice()
     
@@ -116,35 +130,37 @@ class controlPanel(Frame):
         self.setScene(self.selecteddevice)
 
     def setScene(self, name):
-        self.submenu1.entryconfig("Reselect Device",state="normal")
-        self.submenu1.entryconfig("Revert Keys to Default",state="normal")
-        self.submenu1.entryconfig("Revert LEDs to Default",state="normal")
-        self.submenu1.entryconfig("Revert All Setting to Default",state="normal")
-        self.menutab.entryconfig("Refresh",state="normal")
-        print("\nvalidating")
-        isserial = connect.openSerial(name)
-        self.connecttext.destroy()
         try:
-            if isserial:
+            self.submenu1.entryconfig("Reselect Device",state="normal")
+            self.submenu1.entryconfig("Revert Keys to Default",state="normal")
+            self.submenu1.entryconfig("Revert LEDs to Default",state="normal")
+            self.submenu1.entryconfig("Revert All Setting to Default",state="normal")
+            self.menutab.entryconfig("Refresh",state="normal")
+            print("\nvalidating")
+            isserial = connect.openSerial(name)
+            self.connecttext.destroy()
+            try:
+                if isserial:
+                    print(isserial)
+                    self.deviceinfo = connect.updateSerial(name) 
+                    self.textframe = LabelFrame(self.parent,text="{} on {}".format(self.deviceinfo["NAME"],name))
+                    self.textframe.grid(sticky=N)
+                    #temp \/
+                    devtextinfo.set("Keys: {},Matrix Configuration: {}x{},LED: {},RGB: {}".format(self.deviceinfo["KEY"],self.deviceinfo["COL"],self.deviceinfo["ROW"],self.deviceinfo["LED"],self.deviceinfo["RGB"]))
+                    self.text2 = Label(self.textframe,textvariable=devtextinfo)
+                    self.text2.grid(row=2)
+                    self.keydata = keyFrame(self.textframe,name,self.deviceinfo)
+                    
+                    self.keydata.grid(row=1)
+                else:
+                    print(isserial)
+                    raise Exception("Unable to Connect to the Device.")
+            except Exception as e:
+                print(e)
                 print(isserial)
-                self.deviceinfo = connect.updateSerial(name) 
-                self.textframe = LabelFrame(self.parent,text="{} on {}".format(self.deviceinfo["NAME"],name))
-                self.textframe.grid(sticky=N)
-                #temp \/
-                devtextinfo.set("Keys: {},Matrix Configuration: {}x{},LED: {},RGB: {}".format(self.deviceinfo["KEY"],self.deviceinfo["COL"],self.deviceinfo["ROW"],self.deviceinfo["LED"],self.deviceinfo["RGB"]))
-                self.text2 = Label(self.textframe,textvariable=devtextinfo)
-                self.text2.grid(row=2)
-                self.keydata = keyFrame(self.textframe,name,self.deviceinfo)
-                
-                self.keydata.grid(row=1)
-            else:
-                print(isserial)
-                raise Exception("Unable to Connect to the Device.")
-        except Exception as e:
-            print(e)
-            print(isserial)
-            self.deleteScene()
-            
+                self.deleteScene()
+        except:
+            pass
 
     def deleteScene(self):
         try:
