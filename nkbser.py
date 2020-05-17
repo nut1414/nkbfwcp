@@ -117,11 +117,7 @@ reverseddict = {value:key for key, value in arduinoascii.items()}
 
 class deviceList(object):
     def __init__(self):
-        self.device = [comport.device for comport in serial.tools.list_ports.comports()]
-        self.manufacturer  = [comport.manufacturer for comport in serial.tools.list_ports.comports()]
-        self.deviceCount = len(self.device)
-        listdev = { i + 1 : self.device[i] for i in range(0,self.deviceCount)}
-        self.list ={value:key for key, value in listdev.items()}
+        self.update()
     def update(self):
         self.device = [comport.device for comport in serial.tools.list_ports.comports()]
         self.manufacturer  = [comport.manufacturer for comport in serial.tools.list_ports.comports()]
