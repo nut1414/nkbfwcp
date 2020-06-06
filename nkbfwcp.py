@@ -93,6 +93,7 @@ class controlPanel(Frame):
         self.parent = parent
         self.parent.title("nkbfwcp")
         self.parent.iconbitmap(icopath)
+        self.parent.iconbitmap(default=icopath)
         self.selectionmenu()
         self.chooseDevice()
     
@@ -295,9 +296,7 @@ class keyFrame(Frame):
         self.after(100, self.colpoll)
 
     def keypoll(self):
-        
         keyselect = self.keychooser.curselection()
-        
         if keyselect != ():
             try:
                 self.currentkey = keyselect
@@ -337,18 +336,26 @@ class keyFrame(Frame):
         self.keyselectedtext.set("Currently Selected  Row: {}  Column: {}".format(self.selrow, self.selcol))
 
     def setrgb(self,name,r,g,b):
+        self.waitpopup("Sending Information...")
         try:
             connect.sendrgb(name,r,g,b)
+            self.killpopup()
             self.updateinfo(name)
             
         except:
             mainwin.deleteScene()
+        
 
     def setkey(self,name,row,col,key):
-        convertedkey = nkbser.reverseddict[key]
-
-        connect.sendkey(name,row,col,convertedkey)
-        self.updateinfo(name)
+        self.waitpopup("Sending Information...")
+        try:
+            convertedkey = nkbser.reverseddict[key]
+            connect.sendkey(name,row,col,convertedkey)
+            self.killpopup()
+            self.updateinfo(name)
+        except:
+            mainwin.deleteScene()
+        
         pass
 
 
@@ -366,7 +373,9 @@ class keyFrame(Frame):
     def updateinfo(self,name):
         print("\nupdating info")
         print("reconnecting")
+        
         try:
+            self.waitpopup("Updating Information...")
             self.deviceinfo = connect.updateSerial(self.name)
             devtextinfo.set("Keys: {},Matrix Configuration: {}x{},LED: {},RGB: {}".format(self.deviceinfo["KEY"],self.deviceinfo["COL"],self.deviceinfo["ROW"],self.deviceinfo["LED"],self.deviceinfo["RGB"]))
             rgbvalue = self.deviceinfo["RGB"].split("|")
@@ -379,10 +388,29 @@ class keyFrame(Frame):
         except Exception as e:
             print(e)
             mainwin.deleteScene()
+        self.killpopup()
+
     def updatergbcanvas(self):
         htmlcolor = "#{0:02x}{1:02x}{2:02x}".format(self.r.get(),self.g.get(),self.b.get())
         self.rgbcanvas.config(bg=htmlcolor)
         self.after(50, self.updatergbcanvas)
+
+    def waitpopup(self,msg):
+        self.pop = Toplevel(self)
+        self.pop.text = Label(self.pop,text=msg)
+        self.pop.text.pack(padx=30,pady=10)
+        self.pop.textwait = Label(self.pop,text="Please Wait...")
+        self.pop.textwait.pack(padx=30,pady=10)
+        self.pop.attributes('-disabled', True)
+
+        while (not self.pop.winfo_ismapped()):
+            self.pop.update()
+            pass
+        
+    def killpopup(self):
+        self.pop.destroy()
+        pass
+    
 
     
 
