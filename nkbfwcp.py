@@ -92,7 +92,6 @@ class controlPanel(Frame):
         Frame.__init__(self, parent)
         self.parent = parent
         self.parent.title("nkbfwcp")
-        self.parent.iconbitmap(icopath)
         self.parent.iconbitmap(default=icopath)
         self.selectionmenu()
         self.chooseDevice()
